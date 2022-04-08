@@ -2,45 +2,57 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
-
+using System.Linq;
 public class GameHandler : MonoBehaviour
 {
     public UIHandler UIHandler;
-    public List<string> wordsList = new List<string>();
-    public int amountOfChar = 3;
+    public List<string> origWordsList = new List<string>();
+    public List<string> copyWordsList = new List<string>();
+
+    public int levelsCleared = 0;
+    
+        
     // Start is called before the first frame update
     void Start()
     {
+        StartNewGame();
+    }
+    public void StartNewGame(){
         //Add all the words from a file to the list
-        wordsList.AddRange(File.ReadAllLines(@"words.txt"));
-
+        origWordsList.AddRange(File.ReadAllLines(@"words.txt"));
+        origWordsList = origWordsList.OrderBy(x => x.Length).ToList();
+        int currentAmountOfChar = 3;
+        int currentAmountOfWords = 0;
         //Remove all the words that arent with the same amount of characters
-       for (int i = wordsList.Count - 1; i >= 0; i--)
+        for (int i = 0; i < origWordsList.Count;i++)
         {
-            if (wordsList[i].Length != amountOfChar)
-                wordsList.RemoveAt(i);
+            //if(currentAmountOfWords > 50) continue;
+            if(origWordsList[i].Length == currentAmountOfChar && currentAmountOfWords < 50){
+                copyWordsList.Add(origWordsList[i]);
+                currentAmountOfWords++;
+            }
+            if(origWordsList[i].Length > currentAmountOfChar){
+                currentAmountOfChar++;
+                currentAmountOfWords = 0;
+            }
         }
-        UIHandler.updateWordToFind(Shuffle(wordsList[0]), wordsList[0]);
+        UIHandler.updateWordToFind(copyWordsList[levelsCleared]);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+    public void JumpTo(int level){
+        levelsCleared = level;
+        UIHandler.updateWordToFind(copyWordsList[levelsCleared]);
+        //UIHandler.updateScore(levelsCleared);
     }
-    public string Shuffle( string str)
+    public string ShuffleWord(string str)
     {
-        char[] array = str.ToCharArray();
         System.Random rng = new System.Random();
-        int n = array.Length;
-        while (n > 1)
-        {
-            n--;
-            int k = rng.Next(n + 1);
-            var value = array[k];
-            array[k] = array[n];
-            array[n] = value;
-        }
+        char[] array = str.OrderBy(item => rng.Next()).ToArray();
         return new string(array);
+    }
+    public string getNewWord(out string originalWord){
+        string shuffledWord = ShuffleWord(copyWordsList[levelsCleared + 1]);
+        originalWord = copyWordsList[levelsCleared + 1];
+        return shuffledWord;
     }
 }
