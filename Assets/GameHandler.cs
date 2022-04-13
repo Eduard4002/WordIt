@@ -15,7 +15,14 @@ public class GameHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        loadData();
+        if(SaveSystem.LoadData() == null){
+            levelsCleared = 0;
+            SavePlayer();
+            Debug.Log("Testing");
+        }else{
+            loadData();
+        }
+        
         StartNewGame();
         
     }
