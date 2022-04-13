@@ -15,27 +15,18 @@ public class GameHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        loadData();
         StartNewGame();
+        
+    }
+    void Update(){
+        if(Input.GetKeyDown(KeyCode.Escape)){
+            UIHandler.openPausePanel();
+        }
+    
     }
     public void StartNewGame(){
-        //Add all the words from a file to the list
-        origWordsList.AddRange(File.ReadAllLines(@"words.txt"));
-        origWordsList = origWordsList.OrderBy(x => x.Length).ToList();
-        int currentAmountOfChar = 3;
-        int currentAmountOfWords = 0;
-        //Remove all the words that arent with the same amount of characters
-        for (int i = 0; i < origWordsList.Count;i++)
-        {
-            //if(currentAmountOfWords > 50) continue;
-            if(origWordsList[i].Length == currentAmountOfChar && currentAmountOfWords < 50){
-                copyWordsList.Add(origWordsList[i]);
-                currentAmountOfWords++;
-            }
-            if(origWordsList[i].Length > currentAmountOfChar){
-                currentAmountOfChar++;
-                currentAmountOfWords = 0;
-            }
-        }
+        copyWordsList = SaveSystem.LoadWordsList().words.ToList();
         UIHandler.updateWordToFind(copyWordsList[levelsCleared]);
     }
 
@@ -50,9 +41,25 @@ public class GameHandler : MonoBehaviour
         char[] array = str.OrderBy(item => rng.Next()).ToArray();
         return new string(array);
     }
+    public void SavePlayer(){
+        SaveSystem.SaveData(this);
+    }
+    public void SaveWordsList(){
+        SaveSystem.SaveWordsList(this);
+    }
+    public void loadData(){
+        PlayerData data = SaveSystem.LoadData();
+        levelsCleared = data.levelsCleared;
+        UIHandler.levelText.text = "Level: "+levelsCleared;
+    }
     public string getNewWord(out string originalWord){
-        string shuffledWord = ShuffleWord(copyWordsList[levelsCleared + 1]);
-        originalWord = copyWordsList[levelsCleared + 1];
+        //make sure that the word gets actually shuffled
+        string shuffledWord = ShuffleWord(copyWordsList[levelsCleared]);
+        while(shuffledWord == copyWordsList[levelsCleared]){
+            shuffledWord = ShuffleWord(copyWordsList[levelsCleared]);
+        }
+        originalWord = copyWordsList[levelsCleared];
+        
         return shuffledWord;
     }
 }
